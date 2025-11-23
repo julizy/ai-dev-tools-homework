@@ -1,0 +1,105 @@
+<!-- todo/templates/todo/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TODO App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 16px;
+            background: #f8f9fa;
+        }
+        header {
+            margin-bottom: 24px;
+        }
+        a {
+            text-decoration: none;
+            color: #0d6efd;
+        }
+        a.button {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background: #0d6efd;
+            color: #fff;
+            margin-right: 4px;
+            font-size: 14px;
+        }
+        a.button.secondary {
+            background: #6c757d;
+        }
+        a.button.danger {
+            background: #dc3545;
+        }
+        .resolved {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th, td {
+            border-bottom: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #e9ecef;
+        }
+        .tag {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #fff;
+        }
+        .tag-open {
+            background: #0d6efd;
+        }
+        .tag-done {
+            background: #198754;
+        }
+        .errorlist {
+            color: #dc3545;
+            list-style: none;
+            padding-left: 0;
+        }
+        form {
+            background: #fff;
+            padding: 16px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        form p {
+            margin-bottom: 12px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"],
+        textarea,
+        input[type="date"] {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+        .actions {
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1><a href="{% url 'todo_list' %}">TODO App</a></h1>
+</header>
+
+{% block content %}
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!-- todo/templates/todo/todo_list.html -->
+{% extends "todo/base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 16px;">
+    <a href="{% url 'todo_create' %}" class="button">+ New TODO</a>
+</div>
+
+{% if todos %}
+<table>
+    <thead>
+    <tr>
+        <th>Title</th>
+        <th>Due date</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for todo in todos %}
+        <tr>
+            <td class="{% if todo.is_resolved %}resolved{% endif %}">
+                {{ todo.title }}
+                {% if todo.description %}
+                    <br><small>{{ todo.description }}</small>
+                {% endif %}
+            </td>
+            <td>
+                {% if todo.due_date %}
+                    {{ todo.due_date }}
+                {% else %}
+                    <em>No due date</em>
+                {% endif %}
+            </td>
+            <td>
+                {% if todo.is_resolved %}
+                    <span class="tag tag-done">Done</span>
+                {% else %}
+                    <span class="tag tag-open">Open</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'todo_toggle_resolved' todo.pk %}" class="button secondary">
+                    {% if todo.is_resolved %}Mark as open{% else %}Mark as done{% endif %}
+                </a>
+                <a href="{% url 'todo_update' todo.pk %}" class="button secondary">Edit</a>
+                <a href="{% url 'todo_delete' todo.pk %}" class="button danger">Delete</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No TODOs yet. <a href="{% url 'todo_create' %}">Create one now</a>.</p>
+{% endif %}
+{% endblock %}

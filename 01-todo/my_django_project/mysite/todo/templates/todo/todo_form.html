@@ -1,0 +1,22 @@
+<!-- todo/templates/todo/todo_form.html -->
+{% extends "todo/base.html" %}
+
+{% block content %}
+<h2>
+    {% if form.instance.pk %}Edit TODO{% else %}New TODO{% endif %}
+</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    {{ form.as_p }}
+
+    <div class="actions">
+        <button type="submit" class="button">
+            {% if form.instance.pk %}Save changes{% else %}Create{% endif %}
+        </button>
+        <a href="{% url 'todo_list' %}" class="button secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
