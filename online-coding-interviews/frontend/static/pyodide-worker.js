@@ -26,21 +26,26 @@ self.onmessage = async function(event) {
         try {
             const code = event.data.code;
 
-            // Wrap code to capture output
+            // Simple approach: capture stdout and run code
             const wrappedCode = \`
 import sys
 import io
-import traceback
+from io import StringIO
 
-_captured_output = io.StringIO()
+# Redirect stdout
+old_stdout = sys.stdout
+sys.stdout = StringIO()
 
 try:
-    exec('''\\n\${code}\\n''', {'__name__': '__main__', '_captured_output': _captured_output, 'print': lambda *args, **kwargs: print(*args, file=_captured_output, **kwargs)})
-    result = _captured_output.getvalue()
+    exec('''\\n\${code}\\n''')
+    output = sys.stdout.getvalue()
 except Exception as e:
-    result = traceback.format_exc()
+    import traceback
+    output = traceback.format_exc()
+finally:
+    sys.stdout = old_stdout
 
-result
+output
 \`;
 
             const output = pyodide.runPython(wrappedCode);

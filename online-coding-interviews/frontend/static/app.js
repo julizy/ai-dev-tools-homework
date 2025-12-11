@@ -5,6 +5,7 @@ let currentSessionCode = null;
 let currentLanguage = 'javascript';
 let pyodideReady = false;
 let pyodideWorkerReady = false;
+let isUpdatingOwnCode = false; // Flag to prevent self-update loops
 
 // Detect Safari
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -57,15 +58,20 @@ function initEditor() {
     // Listen for changes with debounce to prevent excessive broadcasts
     let changeTimeout;
     editor.on('change', () => {
-        if (currentSessionCode) {
+        if (currentSessionCode && !isUpdatingOwnCode) {
             clearTimeout(changeTimeout);
             changeTimeout = setTimeout(() => {
                 const code = editor.getValue();
+                isUpdatingOwnCode = true;
                 socket.emit('code_change', {
                     session_code: currentSessionCode,
                     code: code
                 });
-            }, 300); // Debounce: wait 300ms after user stops typing
+                // Reset flag after sending
+                setTimeout(() => {
+                    isUpdatingOwnCode = false;
+                }, 100);
+            }, 500); // Debounce: wait 500ms after user stops typing
         }
     });
 }
@@ -360,18 +366,6 @@ async function createSession() {
             connectToSession(data.session_code);
             displayShareModal(data.session_code, data.url);
         }
-    } catch (error) {// Create session
-async function createSession() {
-    try {
-        const response = await fetch('/api/session', { method: 'POST' });
-        const data = await response.json();
-
-        if (data.success) {
-            currentSessionCode = data.session_code;
-            showEditorPage();
-            connectToSession(data.session_code);
-            displayShareModal(data.session_code, data.url);
-        }
     } catch (error) {
         showNotification(`Error creating session: ${error}`, 'error');
     }
@@ -495,12 +489,19 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 
         socket.on('code_updated', (data) => {
-            const currentCode = editor.getValue();
-            const newCode = data.code;
-            if (currentCode !== newCode) {
-                const cursorPos = editor.getCursorPosition();
-                editor.setValue(newCode, -1);
-                editor.moveCursorToPosition(cursorPos);
+            // Only update if not currently typing (wait for debounce)
+            if (!isUpdatingOwnCode) {
+                const currentCode = editor.getValue();
+                const newCode = data.code;
+                if (currentCode !== newCode) {
+                    const cursorPos = editor.getCursorPosition();
+                    isUpdatingOwnCode = true;
+                    editor.setValue(newCode, -1);
+                    editor.moveCursorToPosition(cursorPos);
+                    setTimeout(() => {
+                        isUpdatingOwnCode = false;
+                    }, 100);
+                }
             }
         });
 
