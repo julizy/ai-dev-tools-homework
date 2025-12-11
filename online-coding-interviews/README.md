@@ -6,7 +6,7 @@ A real-time collaborative coding platform built with Flask (backend) and JavaScr
 
 ✅ **Create and Share Sessions** - Generate unique interview session codes and share them with candidates
 ✅ **Real-time Code Synchronization** - All connected users see code changes instantly via WebSocket
-✅ **Multi-language Support** - JavaScript, Python, Java, C++, C#, Ruby, PHP, Go, Rust, SQL, HTML, CSS
+✅ **Multi-language Support** - JavaScript & Python
 ✅ **Syntax Highlighting** - Ace editor provides beautiful syntax highlighting for all languages
 ✅ **Safe Code Execution** - Execute code in the browser using Pyodide for Python and native JS for JavaScript
 ✅ **HTML/CSS Preview** - Render HTML and CSS code directly in the browser
@@ -19,7 +19,7 @@ A real-time collaborative coding platform built with Flask (backend) and JavaScr
 cd online-coding-interviews
 docker-compose up -d
 ```
-Then open: **http://localhost:8080**
+Then open: **http://localhost:5000**
 
 See [DOCKER.md](DOCKER.md) for detailed Docker guide.
 
@@ -29,8 +29,8 @@ cd online-coding-interviews
 npm install
 npm run dev
 ```
-- Frontend: http://localhost:8080
-- Backend: http://localhost:5000
+- Frontend: http://localhost:5000
+- Backend: http://localhost:8080
 ./start.sh server      # Run only the backend server
 ./start.sh client      # Run only the frontend client
 ```
@@ -55,7 +55,7 @@ cd backend
 source venv/bin/activate
 python app.py
 ```
-Server runs on `http://localhost:5000`
+Server runs on `http://localhost:8080`
 
 **Or with custom port:**
 ```bash
@@ -189,7 +189,7 @@ Coverage report will be in `htmlcov/index.html`
 
 ### Test 1: Create and Join Session
 
-1. Open `http://localhost:8000`
+1. Open `http://localhost:5000`
 2. Click "Create Interview Session"
 3. Copy the session code
 4. In a new tab, paste the code and click "Join"
@@ -220,7 +220,7 @@ print(sum(x))
 
 ### Test 3: Multi-User Collaboration
 
-1. Open the same session in 3 browser tabs
+1. Open the same session in 3 browser tabs at `http://localhost:5000`
 2. Type code in different tabs
 3. Verify all tabs show the same code
 4. Verify user count updates
@@ -231,17 +231,17 @@ print(sum(x))
 
 ### Create Session
 ```bash
-curl -X POST http://localhost:5000/api/session
+curl -X POST http://localhost:8080/api/session
 ```
 
 ### Get Session Details
 ```bash
-curl http://localhost:5000/api/session/ABC123XY
+curl http://localhost:8080/api/session/ABC123XY
 ```
 
 ### Access Interview Page
 ```bash
-curl http://localhost:5000/interview/ABC123XY
+curl http://localhost:8080/interview/ABC123XY
 ```
 
 ---
@@ -305,7 +305,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The server will start on `http://localhost:5000`
+The server will start on `http://localhost:8080`
 
 ---
 
@@ -539,12 +539,21 @@ MIT License - Feel free to use for educational and commercial purposes.
 For issues or questions:
 ## Documentation
 
+**Core Documentation:**
+
 | Document | Purpose |
 |----------|---------|
 | [DOCKER.md](DOCKER.md) | Docker deployment guide with commands |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment & scaling |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment & scaling strategies |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Technical architecture & design |
 | [TESTING.md](TESTING.md) | Testing guide & test cases |
+
+**Cloud Deployment:**
+
+| Document | Purpose |
+|----------|---------|
+| [CLOUD_RUN_DEPLOYMENT.md](CLOUD_RUN_DEPLOYMENT.md) | Complete Google Cloud Run deployment guide (quick & detailed) |
+| [GET_PROJECT_ID.md](GET_PROJECT_ID.md) | How to get your Google Cloud Project ID |
 
 ## Implementation Status
 
@@ -575,9 +584,11 @@ For issues or questions:
 ## Troubleshooting
 
 1. Check the relevant .md file (see Documentation section above)
-2. Review TESTING.md for test procedures
-3. See ARCHITECTURE.md for technical details
-4. Check code comments
+2. For deployment issues, see [CLOUD_RUN_DEPLOYMENT.md](CLOUD_RUN_DEPLOYMENT.md)
+3. For Docker issues, see [DOCKER.md](DOCKER.md)
+4. For test issues, see [TESTING.md](TESTING.md)
+5. Review [ARCHITECTURE.md](ARCHITECTURE.md) for technical details
+6. Check code comments
 
 ---
 
