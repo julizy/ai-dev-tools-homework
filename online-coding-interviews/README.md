@@ -551,9 +551,8 @@ For issues or questions:
 **Cloud Deployment:**
 
 | Document | Purpose |
-|----------|---------|
+|----------|----------|
 | [CLOUD_RUN_DEPLOYMENT.md](CLOUD_RUN_DEPLOYMENT.md) | Complete Google Cloud Run deployment guide (quick & detailed) |
-| [GET_PROJECT_ID.md](GET_PROJECT_ID.md) | How to get your Google Cloud Project ID |
 
 ## Implementation Status
 

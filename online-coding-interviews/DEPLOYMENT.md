@@ -9,44 +9,17 @@
 
 ## Docker Deployment
 
-### Quick Start (Recommended)
+**For comprehensive Docker deployment guide, see: [DOCKER.md](DOCKER.md)**
 
+Quick start:
 ```bash
 cd online-coding-interviews
-
-# Start with docker-compose
 docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Run tests in container
-docker-compose exec app python -m pytest backend/ -v
-
-# Stop containers
-docker-compose down
 ```
 
-**Access the application:**
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:5000
-
-### What's Included
-
-- ✅ Single container with both backend and frontend
-- ✅ Multi-stage Docker build (optimized)
-- ✅ SQLite database with persistent volume
-- ✅ Health checks
-- ✅ Automatic restart on failure
-- ✅ Pre-configured environment variables
-
-### Detailed Docker Instructions
-
-See **DOCKER.md** for comprehensive Docker deployment guide.
-
-### Quick Reference
-
-See **DOCKER_QUICK_REFERENCE.md** for common Docker commands.
+Access the application:
+- Frontend: http://localhost:5000
+- Backend API: http://localhost:8080
 
 ---
 

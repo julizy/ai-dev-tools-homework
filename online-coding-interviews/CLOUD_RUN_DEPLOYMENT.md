@@ -68,7 +68,7 @@ Before deploying, ensure you have:
 - [ ] **Google Cloud Account** created with billing enabled
 - [ ] **gcloud CLI** installed (`gcloud --version`)
 - [ ] **Docker** installed and running (`docker ps`)
-- [ ] **Project ID** from Google Cloud Console (see: GET_PROJECT_ID.md)
+- [ ] **Project ID** from Google Cloud Console
 - [ ] **Authenticated** with gcloud (`gcloud auth application-default login`)
 - [ ] **Docker image** built locally (`docker build -t coding-interview-platform .`)
 
@@ -104,8 +104,6 @@ If you don't have a project ID yet:
 6. Click "Create"
 
 **Save your Project ID** - you'll need it for deployment.
-
-For detailed instructions, see: **GET_PROJECT_ID.md**
 
 ### Step 2: Set Up Google Cloud Project
 
@@ -480,7 +478,6 @@ To change region, replace `us-central1` in commands with your preferred region.
 ## 📚 Related Documentation
 
 - **README.md** - Main overview and quick start
-- **GET_PROJECT_ID.md** - How to get your Google Cloud Project ID
 - **DOCKER.md** - Docker and local development
 - **DEPLOYMENT.md** - General deployment strategies
 - **TESTING.md** - Running tests
