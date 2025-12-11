@@ -52,6 +52,16 @@ function initEditor() {
     editor.setHighlightActiveLine(true);
     editor.setShowInvisibles(false);
 
+    // Enhanced syntax highlighting settings
+    editor.session.setUseWorker(true); // Enable worker for better performance
+    editor.setHighlightSelectedWord(true); // Highlight all occurrences of selected word
+    editor.session.setTabSize(4);
+    editor.session.setUseSoftTabs(true);
+    editor.setOption('useWrapMode', false);
+    editor.setOption('enableSnippets', true);
+    editor.setOption('enableLiveAutocompletion', true);
+    editor.setOption('enableBasicAutocompletion', true);
+
     // Set initial code
     editor.setValue('// Start coding here...\n', -1);
 
@@ -79,17 +89,7 @@ function initEditor() {
 // Language mode mapping
 const languageModes = {
     'javascript': 'ace/mode/javascript',
-    'python': 'ace/mode/python',
-    'java': 'ace/mode/java',
-    'cpp': 'ace/mode/c_cpp',
-    'csharp': 'ace/mode/csharp',
-    'ruby': 'ace/mode/ruby',
-    'php': 'ace/mode/php',
-    'go': 'ace/mode/golang',
-    'rust': 'ace/mode/rust',
-    'sql': 'ace/mode/sql',
-    'html': 'ace/mode/html',
-    'css': 'ace/mode/css'
+    'python': 'ace/mode/python'
 };
 
 // Change language
@@ -118,20 +118,8 @@ async function executeCode() {
             executeJavaScript(code, outputPanel);
         } else if (currentLanguage === 'python') {
             await executePython(code, outputPanel);
-        } else if (currentLanguage === 'java') {
-            await executeCompiled(code, outputPanel, 62); // Java language ID
-        } else if (currentLanguage === 'cpp') {
-            await executeCompiled(code, outputPanel, 54); // C++ language ID
-        } else if (currentLanguage === 'csharp') {
-            await executeCompiled(code, outputPanel, 51); // C# language ID
-        } else if (currentLanguage === 'go') {
-            await executeCompiled(code, outputPanel, 60); // Go language ID
-        } else if (currentLanguage === 'rust') {
-            await executeCompiled(code, outputPanel, 73); // Rust language ID
-        } else if (currentLanguage === 'sql') {
-            await executeSQL(code, outputPanel);
         } else {
-            outputPanel.textContent = `Execution not yet supported for ${currentLanguage}.`;
+            outputPanel.textContent = `Execution not supported for ${currentLanguage}.`;
         }
     } catch (error) {
         outputPanel.textContent = `Error: ${error.message}`;
@@ -211,137 +199,6 @@ async function executePython(code, outputPanel) {
 
         outputPanel.textContent = output || '(no output)';
         outputPanel.classList.remove('error');
-        outputPanel.classList.add('success');
-    } catch (error) {
-        outputPanel.textContent = `Error: ${error.message}`;
-        outputPanel.classList.add('error');
-    } finally {
-        setTimeout(() => {
-            outputPanel.classList.remove('success');
-            outputPanel.classList.remove('error');
-        }, 3000);
-    }
-}
-
-// Execute compiled/server-side languages via Judge0 API
-async function executeCompiled(code, outputPanel, languageId) {
-    try {
-        outputPanel.textContent = 'Compiling and executing...';
-
-        // Submit code for execution
-        const submitResponse = await fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false', {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json',
-                'X-RapidAPI-Key': '02eb69a5b2msh79f23b4e7f39b29p12e20bjsn4d2d8d34c80b',
-                'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-            },
-            body: JSON.stringify({
-                source_code: btoa(code),
-                language_id: languageId
-            })
-        });
-
-        if (!submitResponse.ok) throw new Error('Failed to submit code');
-        const submitData = await submitResponse.json();
-        const token = submitData.token;
-
-        // Poll for results
-        let result = null;
-        let attempts = 0;
-        const maxAttempts = 30;
-
-        while (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const checkResponse = await fetch(`https://judge0-ce.p.rapidapi.com/submissions/${token}?base64_encoded=true`, {
-                headers: {
-                    'X-RapidAPI-Key': '02eb69a5b2msh79f23b4e7f39b29p12e20bjsn4d2d8d34c80b',
-                    'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
-                }
-            });
-
-            if (!checkResponse.ok) throw new Error('Failed to check submission');
-            result = await checkResponse.json();
-
-            if (result.status.id > 2) break; // 1=In Queue, 2=Processing
-            attempts++;
-        }
-
-        if (!result || !result.status) throw new Error('Execution timeout');
-
-        // Display results
-        if (result.status.id === 3) {
-            // Accepted
-            const output = result.stdout ? atob(result.stdout) : '(no output)';
-            outputPanel.textContent = output;
-            outputPanel.classList.add('success');
-        } else if (result.status.id === 4) {
-            // Wrong Answer
-            outputPanel.textContent = `Output:\n${result.stdout ? atob(result.stdout) : '(no output)'}`;
-            outputPanel.classList.add('error');
-        } else if (result.status.id === 5) {
-            // Time Limit Exceeded
-            outputPanel.textContent = 'Error: Time Limit Exceeded';
-            outputPanel.classList.add('error');
-        } else if (result.status.id === 6) {
-            // Compilation Error
-            outputPanel.textContent = `Compilation Error:\n${result.compile_output ? atob(result.compile_output) : 'Unknown error'}`;
-            outputPanel.classList.add('error');
-        } else if (result.status.id === 7) {
-            // Runtime Error
-            outputPanel.textContent = `Runtime Error:\n${result.stderr ? atob(result.stderr) : 'Unknown error'}`;
-            outputPanel.classList.add('error');
-        } else {
-            outputPanel.textContent = `Status: ${result.status.description}`;
-        }
-    } catch (error) {
-        outputPanel.textContent = `Error: ${error.message}`;
-        outputPanel.classList.add('error');
-    } finally {
-        setTimeout(() => {
-            outputPanel.classList.remove('success');
-            outputPanel.classList.remove('error');
-        }, 3000);
-    }
-}
-
-// Execute SQL using sql.js
-async function executeSQL(code, outputPanel) {
-    try {
-        if (typeof SQL === 'undefined') {
-            outputPanel.textContent = '⏳ SQL runtime is loading... Please wait.';
-            outputPanel.classList.add('error');
-            return;
-        }
-
-        const db = new SQL.Database();
-        const results = [];
-        const statements = code.split(';').filter(s => s.trim());
-
-        for (const statement of statements) {
-            try {
-                const result = db.exec(statement);
-                if (result.length > 0) {
-                    results.push(result);
-                }
-            } catch (err) {
-                throw new Error(`SQL Error: ${err.message}`);
-            }
-        }
-
-        if (results.length === 0) {
-            outputPanel.textContent = '(Query executed successfully, no results)';
-        } else {
-            let output = '';
-            for (const result of results) {
-                if (result.length > 0) {
-                    output += '\nColumns: ' + result[0].columns.join(', ') + '\n';
-                    output += result[0].values.map(row => row.join(' | ')).join('\n') + '\n';
-                }
-            }
-            outputPanel.textContent = output || '(no output)';
-        }
         outputPanel.classList.add('success');
     } catch (error) {
         outputPanel.textContent = `Error: ${error.message}`;

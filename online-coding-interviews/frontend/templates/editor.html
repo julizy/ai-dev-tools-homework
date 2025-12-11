@@ -39,14 +39,6 @@
                             <select id="languageSelect">
                                 <option value="javascript">JavaScript</option>
                                 <option value="python">Python</option>
-                                <option value="java">Java</option>
-                                <option value="cpp">C++</option>
-                                <option value="csharp">C#</option>
-                                <option value="ruby">Ruby</option>
-                                <option value="php">PHP</option>
-                                <option value="go">Go</option>
-                                <option value="rust">Rust</option>
-                                <option value="sql">SQL</option>
                             </select>
                         </div>
 
@@ -94,21 +86,19 @@
     <!-- Scripts -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/ace.min.js"></script>
+    <!-- Ace Language Modes (WASM-based) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-java.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-c_cpp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-csharp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-ruby.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-php.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-golang.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-rust.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-sql.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-html.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/mode-css.min.js"></script>
+    <!-- Ace Theme -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/theme-monokai.min.js"></script>
+    <!-- Ace Workers (for better syntax highlighting) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/worker-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/worker-python.min.js"></script>
+    <!-- Ace Autocompletion & Snippets -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.30.0/ext-language_tools.min.js"></script>
+    <!-- WASM Runtimes -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
-    <script src="https://sql.js.org/dist/sql-wasm.js"></script>
+    <!-- App Script -->
     <script src="{{ url_for('static', filename='editor.js') }}"></script>
 </body>
 </html>

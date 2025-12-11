@@ -72,17 +72,7 @@ function initEditor() {
 // Language mode mapping
 const languageModes = {
     'javascript': 'ace/mode/javascript',
-    'python': 'ace/mode/python',
-    'java': 'ace/mode/java',
-    'cpp': 'ace/mode/c_cpp',
-    'csharp': 'ace/mode/csharp',
-    'ruby': 'ace/mode/ruby',
-    'php': 'ace/mode/php',
-    'go': 'ace/mode/golang',
-    'rust': 'ace/mode/rust',
-    'sql': 'ace/mode/sql',
-    'html': 'ace/mode/html',
-    'css': 'ace/mode/css'
+    'python': 'ace/mode/python'
 };
 
 // Change language
@@ -110,10 +100,8 @@ async function executeCode() {
             executeJavaScript(code, outputPanel);
         } else if (currentLanguage === 'python') {
             await executePython(code, outputPanel);
-        } else if (currentLanguage === 'html') {
-            executeHTML(code, outputPanel);
         } else {
-            outputPanel.textContent = `Execution not yet supported for ${currentLanguage}. (Server-side execution available upon request)`;
+            outputPanel.textContent = `Execution not yet supported for ${currentLanguage}.`;
         }
     } catch (error) {
         outputPanel.textContent = `Error: ${error.message}`;
@@ -191,22 +179,6 @@ async function executePython(code, outputPanel) {
             outputPanel.classList.remove('error');
         }, 3000);
     }
-}
-
-// Execute HTML (renders in output panel)
-function executeHTML(code, outputPanel) {
-    const iframe = document.createElement('iframe');
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.background = 'white';
-
-    outputPanel.innerHTML = '';
-    outputPanel.appendChild(iframe);
-
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(code);
-    iframe.contentDocument.close();
 }
 
 // Join session
