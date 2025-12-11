@@ -1,11 +1,54 @@
 # Deployment Guide
 
 ## Table of Contents
-1. [Local Development](#local-development)
-2. [Production Deployment](#production-deployment)
-3. [Docker Deployment](#docker-deployment)
+1. [Docker Deployment](#docker-deployment) ⭐ **Recommended**
+2. [Local Development](#local-development)
+3. [Production Deployment](#production-deployment)
 4. [Cloud Platforms](#cloud-platforms)
 5. [Monitoring & Maintenance](#monitoring--maintenance)
+
+## Docker Deployment
+
+### Quick Start (Recommended)
+
+```bash
+cd online-coding-interviews
+
+# Start with docker-compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Run tests in container
+docker-compose exec app python -m pytest backend/ -v
+
+# Stop containers
+docker-compose down
+```
+
+**Access the application:**
+- Frontend: http://localhost:8080
+- Backend API: http://localhost:5000
+
+### What's Included
+
+- ✅ Single container with both backend and frontend
+- ✅ Multi-stage Docker build (optimized)
+- ✅ SQLite database with persistent volume
+- ✅ Health checks
+- ✅ Automatic restart on failure
+- ✅ Pre-configured environment variables
+
+### Detailed Docker Instructions
+
+See **DOCKER.md** for comprehensive Docker deployment guide.
+
+### Quick Reference
+
+See **DOCKER_QUICK_REFERENCE.md** for common Docker commands.
+
+---
 
 ## Local Development
 
