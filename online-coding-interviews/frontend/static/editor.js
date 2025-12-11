@@ -4,6 +4,7 @@ let editor = null;
 let currentSessionCode = null;
 let currentLanguage = 'javascript';
 let pyodideReady = false;
+let isUpdatingFromSocket = false;
 
 // Get session code from URL
 function getSessionCodeFromURL() {
@@ -59,7 +60,7 @@ function initEditor() {
 
     // Listen for changes
     editor.on('change', () => {
-        if (currentSessionCode) {
+        if (currentSessionCode && !isUpdatingFromSocket) {
             const code = editor.getValue();
             socket.emit('code_change', {
                 session_code: currentSessionCode,
@@ -268,7 +269,9 @@ window.addEventListener('DOMContentLoaded', () => {
             const newCode = data.code;
             if (currentCode !== newCode) {
                 const cursorPos = editor.getCursorPosition();
+                isUpdatingFromSocket = true;
                 editor.setValue(newCode, -1);
+                isUpdatingFromSocket = false;
                 editor.moveCursorToPosition(cursorPos);
             }
         });
@@ -276,7 +279,9 @@ window.addEventListener('DOMContentLoaded', () => {
         socket.on('language_updated', (data) => {
             currentLanguage = data.language;
             document.getElementById('languageSelect').value = data.language;
-            changeLanguage(data.language);
+            // Update editor mode without emitting again
+            const mode = languageModes[data.language] || 'ace/mode/javascript';
+            editor.session.setMode(mode);
         });
 
         socket.on('sync_code', (data) => {

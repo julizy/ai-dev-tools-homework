@@ -32,8 +32,8 @@ gcloud services enable containerregistry.googleapis.com run.googleapis.com
 # 3. Configure Docker auth
 gcloud auth configure-docker gcr.io
 
-# 4. Build image
-docker build -t coding-interview-platform:latest .
+# 4. Build image (for Cloud Run: AMD64/Linux)
+docker build --platform linux/amd64 -t coding-interview-platform:latest .
 
 # 5. Tag image
 docker tag coding-interview-platform:latest \
@@ -141,16 +141,20 @@ docker push gcr.io/$GCP_PROJECT_ID/test:test 2>&1 | grep -q "unauthorized" && ec
 
 ### Step 5: Build Docker Image
 
+**Important:** Cloud Run requires AMD64/Linux architecture. If you're on Mac (ARM64), use the `--platform` flag:
+
 ```bash
 # Navigate to project directory
 cd /Users/zhuye/code/ai-dev-tools-homework/online-coding-interviews
 
-# Build the image
-docker build -t coding-interview-platform:latest .
+# Build the image for Cloud Run (AMD64/Linux)
+docker build --platform linux/amd64 -t coding-interview-platform:latest .
 
 # Verify image was built
 docker images | grep coding-interview-platform
 ```
+
+**Note:** If you get a warning about QEMU, that's normal. Docker will emulate the architecture if needed.
 
 ### Step 6: Tag and Push to Google Container Registry
 

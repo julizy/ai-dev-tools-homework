@@ -71,8 +71,8 @@ fi
 echo ""
 
 # Step 4: Build and push image
-echo -e "${YELLOW}[4/6]${NC} Building Docker image..."
-docker build -t $IMAGE_NAME:latest .
+echo -e "${YELLOW}[4/6]${NC} Building Docker image for Cloud Run (amd64/linux)..."
+docker build --platform linux/amd64 -t $IMAGE_NAME:latest .
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓${NC} Docker image built successfully"
 else

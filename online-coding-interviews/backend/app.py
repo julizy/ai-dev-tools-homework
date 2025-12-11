@@ -187,7 +187,7 @@ def handle_code_change(data):
         emit('code_updated', {
             'code': code,
             'user_id': request.sid
-        }, room=room, skip_sid=request.sid)
+        }, room=room)
 
     except Exception as e:
         print(f'Error in code_change: {e}')
@@ -214,7 +214,7 @@ def handle_language_change(data):
         session.language = language
         db.session.commit()
 
-        # Broadcast language change to all users
+        # Broadcast language change to all users except the sender
         emit('language_updated', {
             'language': language
         }, room=room, skip_sid=request.sid)
