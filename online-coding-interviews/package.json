@@ -1,0 +1,25 @@
+{
+  "name": "online-coding-interviews",
+  "version": "1.0.0",
+  "description": "Real-time collaborative coding interview platform",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && source venv/bin/activate && python app.py",
+    "client": "cd frontend && python -m http.server 8080",
+    "test": "cd backend && source venv/bin/activate && pytest -v",
+    "test:quick": "cd backend && source venv/bin/activate && pytest --tb=no -q",
+    "test:coverage": "cd backend && source venv/bin/activate && pytest --cov=app --cov-report=html --cov-report=term"
+  },
+  "keywords": [
+    "coding",
+    "interview",
+    "collaboration",
+    "real-time",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
