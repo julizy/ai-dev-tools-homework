@@ -4,24 +4,29 @@ let editor = null;
 let currentSessionCode = null;
 let currentLanguage = 'javascript';
 let pyodideReady = false;
+let pyodideWorkerReady = false;
 
-// Initialize Pyodide
+// Detect Safari
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+// Initialize Pyodide (now using Worker)
 async function initPyodide() {
     try {
-        let pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
-        });
-        window.pyodide = pyodide;
+        await initPyodideWorker();
+        pyodideWorkerReady = true;
         pyodideReady = true;
-        console.log('Pyodide loaded successfully');
+        console.log('Pyodide Worker loaded successfully');
+        showNotification('Python runtime ready', 'success');
     } catch (error) {
-        console.error('Error loading Pyodide:', error);
+        console.error('Error loading Pyodide Worker:', error);
+        showNotification('Error loading Python runtime', 'error');
     }
 }
 
 // Initialize Socket.IO connection
 function initSocket() {
     socket = io();
+
 
     socket.on('connect', () => {
         console.log('Connected to server');
@@ -49,14 +54,18 @@ function initEditor() {
     // Set initial code
     editor.setValue('// Start coding here...\n', -1);
 
-    // Listen for changes
+    // Listen for changes with debounce to prevent excessive broadcasts
+    let changeTimeout;
     editor.on('change', () => {
         if (currentSessionCode) {
-            const code = editor.getValue();
-            socket.emit('code_change', {
-                session_code: currentSessionCode,
-                code: code
-            });
+            clearTimeout(changeTimeout);
+            changeTimeout = setTimeout(() => {
+                const code = editor.getValue();
+                socket.emit('code_change', {
+                    session_code: currentSessionCode,
+                    code: code
+                });
+            }, 300); // Debounce: wait 300ms after user stops typing
         }
     });
 }
@@ -78,12 +87,13 @@ const languageModes = {
 };
 
 // Change language
-function changeLanguage(language) {
+function changeLanguage(language, fromSocket = false) {
     currentLanguage = language;
     const mode = languageModes[language] || 'ace/mode/javascript';
     editor.session.setMode(mode);
 
-    if (currentSessionCode) {
+    // Only emit if this change was initiated by the user, not from socket
+    if (currentSessionCode && !fromSocket) {
         socket.emit('language_change', {
             session_code: currentSessionCode,
             language: language
@@ -102,10 +112,20 @@ async function executeCode() {
             executeJavaScript(code, outputPanel);
         } else if (currentLanguage === 'python') {
             await executePython(code, outputPanel);
-        } else if (currentLanguage === 'html') {
-            executeHTML(code, outputPanel);
+        } else if (currentLanguage === 'java') {
+            await executeCompiled(code, outputPanel, 62); // Java language ID
+        } else if (currentLanguage === 'cpp') {
+            await executeCompiled(code, outputPanel, 54); // C++ language ID
+        } else if (currentLanguage === 'csharp') {
+            await executeCompiled(code, outputPanel, 51); // C# language ID
+        } else if (currentLanguage === 'go') {
+            await executeCompiled(code, outputPanel, 60); // Go language ID
+        } else if (currentLanguage === 'rust') {
+            await executeCompiled(code, outputPanel, 73); // Rust language ID
+        } else if (currentLanguage === 'sql') {
+            await executeSQL(code, outputPanel);
         } else {
-            outputPanel.textContent = `Execution not yet supported for ${currentLanguage}. (Server-side execution available upon request)`;
+            outputPanel.textContent = `Execution not yet supported for ${currentLanguage}.`;
         }
     } catch (error) {
         outputPanel.textContent = `Error: ${error.message}`;
@@ -129,13 +149,31 @@ function executeJavaScript(code, outputPanel) {
     };
 
     try {
-        const result = eval(code);
-        if (result !== undefined) {
-            output += String(result);
+        // Create a function from the code instead of using eval
+        const asyncFunction = new Function(code);
+        const result = asyncFunction();
+
+        // Handle async results
+        if (result instanceof Promise) {
+            result.then(res => {
+                if (res !== undefined) {
+                    output += String(res);
+                }
+                outputPanel.textContent = output || '(no output)';
+                outputPanel.classList.remove('error');
+                outputPanel.classList.add('success');
+            }).catch(err => {
+                outputPanel.textContent = `Error: ${err.message}`;
+                outputPanel.classList.add('error');
+            });
+        } else {
+            if (result !== undefined) {
+                output += String(result);
+            }
+            outputPanel.textContent = output || '(no output)';
+            outputPanel.classList.remove('error');
+            outputPanel.classList.add('success');
         }
-        outputPanel.textContent = output || '(no output)';
-        outputPanel.classList.remove('error');
-        outputPanel.classList.add('success');
     } catch (error) {
         outputPanel.textContent = `Error: ${error.message}`;
         outputPanel.classList.add('error');
@@ -148,28 +186,22 @@ function executeJavaScript(code, outputPanel) {
     }
 }
 
-// Execute Python
+// Execute Python using Web Worker
 async function executePython(code, outputPanel) {
-    if (!pyodideReady) {
-        outputPanel.textContent = 'Python runtime is loading... Please try again in a moment.';
+    if (!pyodideWorkerReady) {
+        outputPanel.textContent = '⏳ Python runtime is still loading... This can take 10-30 seconds on first use. Please wait and try again.';
+        outputPanel.classList.add('error');
+        return;
+    }
+
+    if (!code.trim()) {
+        outputPanel.textContent = '(no code to execute)';
         return;
     }
 
     try {
-        let pyodide = window.pyodide;
-
-        // Capture stdout
-        const originalStdout = pyodide.runPython(`
-            import sys
-            import io
-            sys.stdout = io.StringIO()
-        `);
-
-        // Execute the code
-        const result = pyodide.runPython(code);
-
-        // Get the captured output
-        const output = pyodide.runPython('sys.stdout.getvalue()');
+        outputPanel.textContent = 'Executing...';
+        const output = await executePythonInWorker(code);
 
         outputPanel.textContent = output || '(no output)';
         outputPanel.classList.remove('error');
@@ -185,23 +217,150 @@ async function executePython(code, outputPanel) {
     }
 }
 
-// Execute HTML (renders in output panel)
-function executeHTML(code, outputPanel) {
-    const iframe = document.createElement('iframe');
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.background = 'white';
+// Execute compiled/server-side languages via Judge0 API
+async function executeCompiled(code, outputPanel, languageId) {
+    try {
+        outputPanel.textContent = 'Compiling and executing...';
 
-    outputPanel.innerHTML = '';
-    outputPanel.appendChild(iframe);
+        // Submit code for execution
+        const submitResponse = await fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'X-RapidAPI-Key': '02eb69a5b2msh79f23b4e7f39b29p12e20bjsn4d2d8d34c80b',
+                'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
+            },
+            body: JSON.stringify({
+                source_code: btoa(code),
+                language_id: languageId
+            })
+        });
 
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(code);
-    iframe.contentDocument.close();
+        if (!submitResponse.ok) throw new Error('Failed to submit code');
+        const submitData = await submitResponse.json();
+        const token = submitData.token;
+
+        // Poll for results
+        let result = null;
+        let attempts = 0;
+        const maxAttempts = 30;
+
+        while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const checkResponse = await fetch(`https://judge0-ce.p.rapidapi.com/submissions/${token}?base64_encoded=true`, {
+                headers: {
+                    'X-RapidAPI-Key': '02eb69a5b2msh79f23b4e7f39b29p12e20bjsn4d2d8d34c80b',
+                    'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
+                }
+            });
+
+            if (!checkResponse.ok) throw new Error('Failed to check submission');
+            result = await checkResponse.json();
+
+            if (result.status.id > 2) break; // 1=In Queue, 2=Processing
+            attempts++;
+        }
+
+        if (!result || !result.status) throw new Error('Execution timeout');
+
+        // Display results
+        if (result.status.id === 3) {
+            // Accepted
+            const output = result.stdout ? atob(result.stdout) : '(no output)';
+            outputPanel.textContent = output;
+            outputPanel.classList.add('success');
+        } else if (result.status.id === 4) {
+            // Wrong Answer
+            outputPanel.textContent = `Output:\n${result.stdout ? atob(result.stdout) : '(no output)'}`;
+            outputPanel.classList.add('error');
+        } else if (result.status.id === 5) {
+            // Time Limit Exceeded
+            outputPanel.textContent = 'Error: Time Limit Exceeded';
+            outputPanel.classList.add('error');
+        } else if (result.status.id === 6) {
+            // Compilation Error
+            outputPanel.textContent = `Compilation Error:\n${result.compile_output ? atob(result.compile_output) : 'Unknown error'}`;
+            outputPanel.classList.add('error');
+        } else if (result.status.id === 7) {
+            // Runtime Error
+            outputPanel.textContent = `Runtime Error:\n${result.stderr ? atob(result.stderr) : 'Unknown error'}`;
+            outputPanel.classList.add('error');
+        } else {
+            outputPanel.textContent = `Status: ${result.status.description}`;
+        }
+    } catch (error) {
+        outputPanel.textContent = `Error: ${error.message}`;
+        outputPanel.classList.add('error');
+    } finally {
+        setTimeout(() => {
+            outputPanel.classList.remove('success');
+            outputPanel.classList.remove('error');
+        }, 3000);
+    }
+}
+
+// Execute SQL using sql.js
+async function executeSQL(code, outputPanel) {
+    try {
+        if (typeof SQL === 'undefined') {
+            outputPanel.textContent = '⏳ SQL runtime is loading... Please wait.';
+            outputPanel.classList.add('error');
+            return;
+        }
+
+        const db = new SQL.Database();
+        const results = [];
+        const statements = code.split(';').filter(s => s.trim());
+
+        for (const statement of statements) {
+            try {
+                const result = db.exec(statement);
+                if (result.length > 0) {
+                    results.push(result);
+                }
+            } catch (err) {
+                throw new Error(`SQL Error: ${err.message}`);
+            }
+        }
+
+        if (results.length === 0) {
+            outputPanel.textContent = '(Query executed successfully, no results)';
+        } else {
+            let output = '';
+            for (const result of results) {
+                if (result.length > 0) {
+                    output += '\nColumns: ' + result[0].columns.join(', ') + '\n';
+                    output += result[0].values.map(row => row.join(' | ')).join('\n') + '\n';
+                }
+            }
+            outputPanel.textContent = output || '(no output)';
+        }
+        outputPanel.classList.add('success');
+    } catch (error) {
+        outputPanel.textContent = `Error: ${error.message}`;
+        outputPanel.classList.add('error');
+    } finally {
+        setTimeout(() => {
+            outputPanel.classList.remove('success');
+            outputPanel.classList.remove('error');
+        }, 3000);
+    }
 }
 
 // Create session
+async function createSession() {
+    try {
+        const response = await fetch('/api/session', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            currentSessionCode = data.session_code;
+            showEditorPage();
+            connectToSession(data.session_code);
+            displayShareModal(data.session_code, data.url);
+        }
+    } catch (error) {// Create session
 async function createSession() {
     try {
         const response = await fetch('/api/session', { method: 'POST' });
@@ -348,14 +507,14 @@ window.addEventListener('DOMContentLoaded', () => {
         socket.on('language_updated', (data) => {
             currentLanguage = data.language;
             document.getElementById('languageSelect').value = data.language;
-            changeLanguage(data.language);
+            changeLanguage(data.language, true);
         });
 
         socket.on('sync_code', (data) => {
             editor.setValue(data.code, -1);
             currentLanguage = data.language;
             document.getElementById('languageSelect').value = data.language;
-            changeLanguage(data.language);
+            changeLanguage(data.language, true);
         });
 
         socket.on('user_left', (data) => {
